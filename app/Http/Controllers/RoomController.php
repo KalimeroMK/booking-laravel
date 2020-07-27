@@ -2,71 +2,85 @@
 
 namespace App\Http\Controllers;
 
-use App\Room;
-use Illuminate\Http\Request;
+use App\Http\Requests\Room\Store;
+use App\Http\Requests\Room\Update;
+use App\Models\Room;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class RoomController extends Controller
 {
-
+    /**
+     * @return Application|Factory|View
+     */
     public function index()
     {
         $rooms = Room::all();
         return view('rooms.index', compact('rooms'));
     }
 
+    /**
+     * @return Application|Factory|View
+     */
     public function create()
     {
         $room = new Room();
         return view('rooms.create', compact('room'));
     }
 
-    public function store(Request $request)
+    /**
+     * @param Store $request
+     * @return Application|Factory|View
+     */
+    public function store(Store $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'floor' => 'required',
-            'type' => 'required',
-            'beds' => 'required'
-        ]);
-
-        Room::create($request->all());
-
+$room = Room::create($request->all());
         $request->session()->flash('msg', 'Room has been created');
 
-        return redirect('/rooms');
-    }
-
-    public function show(Room $room)
-    {
-        $room = Room::find($room->id);
-        return view('rooms.detail', compact('room'));
-    }
-
-    public function edit(Room $room)
-    {
-        $room = Room::find($room->id);
         return view('rooms.edit', compact('room'));
     }
 
-    public function update(Request $request, $id)
+    /**
+     * @param Room $room
+     * @return Application|Factory|View
+     */
+    public function show(Room $room)
     {
-        $request->validate([
-            'name' => 'required',
-            'floor' => 'required',
-            'type' => 'required',
-            'beds' => 'required'
-        ]);
-
-        $room = Room::find($id);
-        $room->update($request->all());
-        $request->session()->flash('msg', 'Room has been updated');
-        return redirect('/rooms');
+        return view('rooms.show', compact('room'));
     }
 
+    /**
+     * @param Room $room
+     * @return Application|Factory|View
+     */
+    public function edit(Room $room)
+    {
+        return view('rooms.edit', compact('room'));
+    }
+
+    /**
+     * @param Update $request
+     * @param Room $room
+     * @return Application|Factory|
+     */
+    public function update(Update $request, Room $room)
+    {
+
+        $room->update($request->all());
+        $request->session()->flash('msg', 'Room has been updated');
+        return view('rooms.edit', compact('room'));
+    }
+
+    /**
+     * @param Room $room
+     * @return RedirectResponse
+     */
     public function destroy(Room $room)
     {
-        Room::destroy($room->id);
+        Room::destroy($room);
         request()->session()->flash('msg', 'Room has been deleted');
-        return redirect('rooms');
+        return redirect()->route('rooms.index');
     }
 }

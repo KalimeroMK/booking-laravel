@@ -2,134 +2,102 @@
 
 namespace App\Http\Controllers;
 
-use App\Booking;
-use Illuminate\Http\Request;
-use App\Client;
+use App\Http\Requests\Client\Store;
+use App\Http\Requests\Client\Update;
+use App\Models\Booking;
+use App\Models\Client;
+use App\Traits\ImageUpload;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class ClientsController extends Controller
 {
 
+use ImageUpload;
+
+    /**
+     * @return Application|Factory|
+     */
     public function index()
     {
-        // Find All clients and passing to clients
         $clients = Client::all();
-
-        // Redirect to Clients page
         return view('clients.index', compact('clients'));
     }
 
+    /**
+     * @return Application|Factory|View
+     */
     public function create()
     {
-        // Instance of Client
         $client = new Client();
-
-        // Redirect to client page, along with passing client object into Array
         return view('clients.create', compact('client'));
     }
 
-    public function store(Request $request)
+    /**
+     * @param Store $request
+     * @return Application|Factory|View
+     */
+    public function store(Store $request)
     {
-        // Validate the form
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required',
-            'image' => 'required|image'
-        ]);
+        $client = Client::create($request->except('image') + [
+                'image' => $this->verifyAndStoreImage($request),
+            ]);
 
-        // Check if there is any file
-        if ($request->hasFile('image')) {
-            $image = $request->image;
-            $image->move("uploads", $image->getClientOriginalName());
-        }
-
-        // Store into Database
-        Client::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'image' => $request->image->getClientOriginalName()
-        ]);
-
-        // Stored a Message in session
         $request->session()->flash('msg', 'Client has been added');
 
         // Redirect back to Clients
-        return redirect('/clients');
-    }
-
-    public function show($id)
-    {
-        // Find the client
-        $client = Client::find($id);
-
-        // Get a specific booking
-        $bookings = Booking::where('client_id', $id)->get()->all();
-
-        // Return back to client details
-        return view('clients.detail', compact('client', 'bookings'));
-    }
-
-    public function edit($id)
-    {
-        // Find the client
-        $client = Client::find($id);
-
-        // Redirect to Edit client
         return view('clients.edit', compact('client'));
     }
 
-    public function update(Request $request, $id)
+    /**
+     * @param Client $client
+     * @return Application|Factory|View
+     */
+    public function show(Client $client)
     {
-        // Find the client
-        $client = Client::find($id);
-
-        // Validate the form
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required',
-        ]);
-
-        // Check if there is any image,
-        if ($request->hasFile('image')) {
-            // Check if file exists
-            if (file_exists(public_path('uploads/') . $client->image)) {
-                // Delete an old image
-                unlink(public_path('uploads/') . $client->image);
-            }
-
-            // Get and Upload new image
-            $image = $request->image;
-            $image->move("uploads", $image->getClientOriginalName());
-
-            $client->image = $request->image->getClientOriginalName();
-        }
-
-        // Updating Clients
-        $client->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'image' => $client->image,
-        ]);
-
-        // Store a message in session
-        request()->session()->flash('msg', 'Client has been updated');
-
-        // Redirect to Clients
-        return redirect('clients');
+        $bookings = Booking::where('client_id', $client)->get()->all();
+        return view('clients.show', compact('client', 'bookings'));
     }
 
-    public function destroy($id)
+    /**
+     * @param Client $client
+     * @return Application|Factory|View
+     */
+    public function edit(Client $client)
     {
-        // Find the client
-        Client::destroy($id);
 
-        // Store a message n session
+        return view('clients.edit', compact('client'));
+    }
+
+    /**
+     * @param Update $request
+     * @param Client $client
+     * @return Application|Factory|View
+     */
+    public function update(Update $request, Client $client)
+    {
+
+        if ($request->hasFile('image')) {
+            $client->update($request->except('image') + [
+                    'image' => $this->verifyAndStoreImage($request),
+                ]);
+        } else {
+            $client->update($request->all());
+        }
+        request()->session()->flash('msg', 'Client has been updated');
+        return view('clients.edit', compact('client'));
+    }
+
+    /**
+     * @param Client $client
+     * @return RedirectResponse
+     */
+    public function destroy(Client $client)
+    {
+        Client::destroy($client);
         request()->session()->flash('msg', 'Client has been deleted');
-
-        // Redirect back to Clients
-        return redirect('clients');
+        return redirect()->route('clients.index');
     }
 }

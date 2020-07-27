@@ -2,21 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Booking;
-use App\CanceledBooking;
-use App\Client;
-use App\Room;
+
+use App\Http\Requests\Booking\Store;
+use App\Http\Requests\Booking\Update;
+use App\Models\Booking;
+use App\Models\Client;
+use App\Models\Room;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class BookingController extends Controller
 {
-
+    /**
+     * @return Application|Factory|View
+     */
     public function index()
     {
         $bookings = Booking::all();
         return view('bookings.index', compact('bookings'));
     }
 
+    /**
+     * @return Application|Factory|View
+     */
     public function create()
     {
         $booking = new Booking();
@@ -25,23 +36,15 @@ class BookingController extends Controller
         return view('bookings.create', compact('clients', 'rooms', 'booking'));
     }
 
-    public function store(Request $request)
+    /**
+     * @param Store $request
+     * @return RedirectResponse
+     */
+    public function store(Store $request)
     {
-        // Validate the Form
-        $request->validate([
-            'client_id' => 'required',
-            'room_id' => 'required',
-            'start_date' => 'required',
-            'end_date' => 'required',
-        ]);
 
         // Save into Database
-        Booking::create([
-            'client_id' => $request->client_id,
-            'room_id' => $request->room_id,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-        ]);
+        Booking::create($request->all());
 
         // Update Rooms status
         $room = Room::find($request->room_id);
@@ -50,39 +53,58 @@ class BookingController extends Controller
 
         session()->flash('msg', 'The Room Has been booked');
 
-        return redirect('/booking');
+        return redirect()->route('booking.index');
     }
 
-
-    public function show($id)
+    /**
+     * @param Booking $booking
+     * @return Application|Factory|View
+     */
+    public function show(Booking $booking)
     {
-        $booking = Booking::find($id);
-        return view('bookings.detail', compact('booking'));
+        return view('bookings.show', compact('booking'));
     }
 
+    /**
+     * @param Booking $booking
+     * @return Application|Factory|View
+     */
     public function edit(Booking $booking)
     {
-        $booking = Booking::find($booking->id);
         $rooms = Room::all();
         $clients = Client::all();
         return view('bookings.edit', compact('booking', 'clients', 'rooms'));
     }
 
-    public function update(Request $request, $id)
+    /**
+     * @param Update $request
+     * @param Booking $booking
+     * @return RedirectResponse
+     */
+    public function update(Update $request, Booking $booking)
     {
-        $booking = Booking::find($id);
         $booking->update($request->all());
         $request->session()->flash('msg', 'Booking has been updated');
-        return redirect('/booking');
+        return redirect()->route('booking.index');
     }
 
+    /**
+     * @param Request $request
+     * @param Booking $booking
+     * @return RedirectResponse
+     */
     public function destroy(Request $request, Booking $booking)
     {
-        Booking::destroy($booking->id);
+        Booking::destroy($booking);
         $request->session()->flash('msg', 'Booking has been deleted');
-        return redirect('booking');
+        return redirect()->route('booking.index');
     }
 
+    /**
+     * @param $room_id
+     * @param $booking_id
+     * @return RedirectResponse
+     */
     public function cancel($room_id, $booking_id) {
         $booking = Booking::find($booking_id);
         $room = Room::find($room_id);
@@ -91,9 +113,12 @@ class BookingController extends Controller
         $booking->save();
         $room->save();
         session()->flash('msg','Booking has been canceled');
-        return redirect('/booking');
+        return redirect()->route('booking.index');
     }
 
+    /**
+     * @return Application|Factory|View
+     */
     public function canceledBookings() {
         $canceledBookings = Booking::where('status', 0)->get();
         return view('bookings.canceled', compact('canceledBookings'));

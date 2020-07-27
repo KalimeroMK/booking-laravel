@@ -49,7 +49,6 @@
             </table>
             {!! Form::open(['route'=> ['clients.destroy', $client->id], 'method' => 'DELETE']) !!}
             <a href="/clients" class="btn btn-success btn-sm">Back</a>
-            {!! link_to_route('clients.edit', 'Edit', [$client->id], ['class'=>'btn btn-info btn-sm']) !!}
             {{ Form::button('Delete', ['type' => 'submit', 'class' => 'btn btn-danger btn-sm','onclick'=>'return confirm("Are you sure you want to delete this?")'] )  }}
             <hr>
             <h3><i class="fa fa-calendar"></i> Booking Details</h3>

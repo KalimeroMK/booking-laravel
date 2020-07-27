@@ -16,11 +16,9 @@
 
             {{ Form::open(['url' => ['booking']]) }}
 
-            @include('bookings._fields')
+            @include('bookings.partials._fields')
 
             {{ Form::submit('Book Room', ['class'=>'btn btn-primary']) }}
-
-            {!!  link_to('/rooms','back',['class'=>'btn btn-success'], $secure = null) !!}
 
             {{ Form::close() }}
 

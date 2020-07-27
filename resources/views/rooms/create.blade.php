@@ -16,7 +16,7 @@
 
             {{ Form::open(['url' => 'rooms']) }}
 
-            @include('rooms._fields')
+            @include('rooms.partials._fields')
 
             {{ Form::submit('Add Room', ['class'=>'btn btn-primary']) }}
 

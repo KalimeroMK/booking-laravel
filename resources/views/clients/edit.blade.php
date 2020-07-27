@@ -13,7 +13,7 @@
 
             {!! Form::model($client, ['route' => ['clients.update', $client->id],'method'=>'PUT', 'files'=>true]) !!}
 
-            @include('clients._fields')
+            @include('clients.partials._fields')
             <div class="form-group">
                 {!! Form::submit('Update', ['class'=>'btn btn-primary']) !!}
                 <a href="/clients" class="btn btn-success">Back to Clients</a>

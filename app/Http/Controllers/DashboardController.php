@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Booking;
-use App\Client;
-use App\Dashboard;
-use App\Room;
-use Carbon\Carbon;
+use App\Models\Booking;
+use App\Models\Client;
+use App\Models\Dashboard;
+use App\Models\Room;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
