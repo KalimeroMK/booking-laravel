@@ -21,7 +21,7 @@ class BookingController extends Controller
      */
     public function index()
     {
-        $bookings = Booking::all();
+        $bookings = Booking::with('client','room')->get();
         return view('bookings.index', compact('bookings'));
     }
 
@@ -32,28 +32,19 @@ class BookingController extends Controller
     {
         $booking = new Booking();
         $clients = Client::all();
-        $rooms = Room::where('status', 1)->get();
+        $rooms = Room::get();
         return view('bookings.create', compact('clients', 'rooms', 'booking'));
     }
 
     /**
      * @param Store $request
-     * @return RedirectResponse
+     * @return Application|Factory|View
      */
     public function store(Store $request)
     {
-
-        // Save into Database
-        Booking::create($request->all());
-
-        // Update Rooms status
-        $room = Room::find($request->room_id);
-        $room->status = 0;
-        $room->save();
-
+        $booking = Booking::create($request->all());
         session()->flash('msg', 'The Room Has been booked');
-
-        return redirect()->route('booking.index');
+        return view('bookings.edit', compact('booking'));
     }
 
     /**
